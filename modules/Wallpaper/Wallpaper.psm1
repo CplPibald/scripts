@@ -8,7 +8,7 @@
   Set-Wallpaper 'c:\pics\stripes.jpg' -style 'Fit'
 
   # Sets wallpaper to a random 
-  Set-NextWallpaper
+  Set-Nex
 
 #>
 
@@ -21,7 +21,11 @@ $SCRIPT:ConfigDefaults = @{
     wallpaperDirectory = [System.Environment]::GetFolderPath("MyPictures")
 }
 
-$SCRIPT:Config = Import-Config -filename $SCRIPT:ConfigPath
+# Load configuration, and initialize if the file isn't there.
+$SCRIPT:Config = Import-Config -filename $SCRIPT:ConfigPath -defaults $SCRIPT:ConfigDefaults
+if (-not (Test-Path $SCRIPT:ConfigPath)) {
+    Export-Config -filename $SCRIPT:ConfigPath -config $SCRIPT:Config
+}
 
 Add-Type @"
 namespace Wallpaper {
