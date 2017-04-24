@@ -41,6 +41,25 @@ $shows = @(
         link = 'http://rynothebearded.com/category/that-show/feed/'
         tagline = 'ryno.cc'
         parse = { (([datetime]$latest.pubDate).toString('yyyyMMdd'), $rssTitle) }
+    },
+    @{
+        name = "Nick the Rat"
+        link = 'http://nicktherat.com/radio/rss.xml'
+        tagline = 'nicktherat.com'
+        parse = { parseRssTitle $rssTitle '^EPISODE (\d+) : (.+)$' }
+        parseDate = { [datetime]($args[0] -replace '\w{3}, ') }
+    },
+    @{
+        name = "Cordkillers"
+        link = 'https://feeds.feedburner.com/CordkillersOnlyAudio'
+        tagline = 'Brian Brushwood & Tom Merritt'
+        parse = { parseRssTitle $rssTitle '^Cordkillers (\d+) . (.+)$' }
+    },
+    @{
+        name = "Grimerica"
+        link = 'http://grimerica.libsyn.com/rss'
+        tagline = 'grimerica.ca'
+        parse = { parseRssTitle $rssTitle '#(\d+) . (.+)$' }
     }
 )
 
@@ -85,14 +104,18 @@ function Get-NewPodcasts {
 
         $rssTitle = $latest.title
         $link = $latest.enclosure.url
-        $pubDate = ([datetime]$latest.pubDate).toString('ddd, dd MMM yyyy')
+        $pubDate = if ($show.containsKey('parseDate')) {
+            (&$show.parseDate $latest.pubDate).toString('ddd, dd MMM yyyy')
+        } else {
+            ([datetime]$latest.pubDate).toString('ddd, dd MMM yyyy')
+        }
 
         $showNumber, $showTitle = & $show.parse
 
         if ($showNumber -gt $SCRIPT:latestEpisodes[$show.name]) {
 
             Write-Host "New episode for $($show.name):" -ForegroundColor Yellow
-            '{0} {1}: "{2}" - {3} - {4}' -f $show.name, $showNumber, $showTitle, $pubDate, $show.tagline
+            '{0} #{1}: "{2}" - {3} - {4}' -f $show.name, $showNumber, $showTitle, $pubDate, $show.tagline
             $link
             ""
             
