@@ -1,96 +1,20 @@
 ﻿
-$shows = @(
-    @{
-        name = "No Agenda"
-        link = 'http://feed.nashownotes.com/rss.xml'
-        tagline = 'Adam Curry & John C. Dvorak'
-        parse = { parseRssTitle $rssTitle '^(\d+).*\"(.+)\"$' }
-    },
-    @{
-        name = "Congressional Dish"
-        link = 'http://www.congressionaldish.com/feed/podcast/'
-        tagline = 'Jennifer Briney'
-        parse = { parseRssTitle $rssTitle '^CD(\d+)\: (.+)$' }
-    },
-    @{
-        name = "Agenda 31"
-        link = 'http://www.agenda31.org/feed/podcast/'
-        tagline = 'Corey Eib & Todd McGreevy'
-        parse = { parseRssTitle $rssTitle '^A31-(\d+) . (.+)$' }
-    },
-    @{
-        name = "DH Unplugged"
-        link = 'http://www.dhunplugged.com/feed/podcast/'
-        tagline = 'Andrew Horowitz & John C. Dvorak'
-        parse = { parseRssTitle $rssTitle '^DHUnplugged #(\d+)\: (.+)$' }
-    },
-    @{
-        name = "Just Getting Tech"
-        link = 'https://justgettingtech.com/podcasts?format=RSS'
-        tagline = 'Craig Jones & Andrew Schmidt'
-        parse = { parseRssTitle $rssTitle '^(\d+)\: (.+)$' }
-    },
-    @{
-        name = "Airline Pilot Guy"
-        link = 'http://airlinepilotguy.com/podcast.xml'
-        tagline = 'airlinepilotguy.com'
-        parse = { parseRssTitle $rssTitle '^APG (\d+) . (.+)$' }
-    },
-    @{
-        name = "The OO Top Ten"
-        link = 'http://rynothebearded.com/category/that-show/feed/'
-        tagline = 'ryno.cc'
-        parse = { (([datetime]$latest.pubDate).toString('yyyyMMdd'), $rssTitle) }
-    },
-    @{
-        name = "Nick the Rat"
-        link = 'http://nicktherat.com/radio/rss.xml'
-        tagline = 'nicktherat.com'
-        parse = { parseRssTitle $rssTitle '^EPISODE (\d+) : (.+)$' }
-        parseDate = { [datetime]($args[0] -replace '\w{3}, ') }
-    },
-    @{
-        name = "Cordkillers"
-        link = 'https://feeds.feedburner.com/CordkillersOnlyAudio'
-        tagline = 'Brian Brushwood & Tom Merritt'
-        parse = { parseRssTitle $rssTitle '^Cordkillers (\d+) . (.+)$' }
-    },
-    @{
-        name = "Grimerica"
-        link = 'http://grimerica.libsyn.com/rss'
-        tagline = 'grimerica.ca'
-        parse = { parseRssTitle $rssTitle '#(\d+) . (.+)$' }
-    }
-)
+# Initialize $shows list from Shows.ps1
+. (join-path $PSScriptRoot 'Shows.ps1')
 
-function parseRssTitle([string]$t, [string]$rgx) {
-    # Returns (number, title)
-    if ($t -match $rgx) {
-        $matches[1..2]
-    } else {
-        (0, "CANNOT PARSE TITLE: {{$rssTitle}}")
-    }
-}
+<# 
+ .Synopsis
+  Polls RSS feeds for inclusion in the No Agenda stream
 
-$latestDataFile = join-path $PSScriptRoot 'latestEpisodes.txt'
+ .Description
+  Exports a function Get-NewPodcasts which will poll the RSS feeds for several podcasts.  When it finds a new
+  episode, it displays the download URL and the metadata formatted for the No Agenda stream
 
-function loadLatest {
-    $SCRIPT:latestEpisodes = @{}
-    if (test-path $latestDataFile) {
-        gc $latestDataFile | % {
-            $title, $num = $_ -split '='
-            $SCRIPT:latestEpisodes[$title] = $num
-        }
-    }
-}
+ .Example
+   # Poll all podcasts for updates
+   Get-NewPodcasts
 
-function saveLatest {
-    $SCRIPT:latestEpisodes.GetEnumerator() | % {
-        "{0}={1}" -f $_.Key, $_.Value
-    } | Out-File $latestDataFile
-
-}
-
+#>
 function Get-NewPodcasts {
 
     loadLatest
@@ -127,6 +51,25 @@ function Get-NewPodcasts {
         }
     }
     saveLatest
+}
+
+$latestDataFile = join-path $PSScriptRoot 'latestEpisodes.txt'
+
+function loadLatest {
+    $SCRIPT:latestEpisodes = @{}
+    if (test-path $latestDataFile) {
+        gc $latestDataFile | % {
+            $title, $num = $_ -split '='
+            $SCRIPT:latestEpisodes[$title] = $num
+        }
+    }
+}
+
+function saveLatest {
+    $SCRIPT:latestEpisodes.GetEnumerator() | % {
+        "{0}={1}" -f $_.Key, $_.Value
+    } | Out-File $latestDataFile
+
 }
 
 Export-ModuleMember Get-NewPodcasts
