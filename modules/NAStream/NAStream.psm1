@@ -1,6 +1,9 @@
 ﻿
-# Initialize $shows list from Shows.ps1
+# Initialize configuration and $shows list
+. (join-path $PSScriptRoot 'config.ps1')
 . (join-path $PSScriptRoot 'Shows.ps1')
+
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 <# 
  .Synopsis
@@ -17,16 +20,24 @@
 #>
 function Get-NewPodcasts {
 
+    param(
+        [switch]$download
+    )
+
     loadLatest
 
     foreach($show in $shows) {
 
-        $page = Invoke-WebRequest $show.link
+        try {
+
+        $page = Invoke-WebRequest $show.rssUri
         $xml = [xml]($page.content)
         $feed = $xml.rss.channel
         $latest = $feed.item[0]
 
-        $rssTitle = $latest.title
+        # The xml parser is picking up Apple's new proprietary <itunes:title> tag, which is turning the title into an array...
+        $rssTitle = $latest.title | select -First 1
+
         $link = $latest.enclosure.url
         $pubDate = if ($show.containsKey('parseDate')) {
             (&$show.parseDate $latest.pubDate).toString('ddd, dd MMM yyyy')
@@ -36,7 +47,10 @@ function Get-NewPodcasts {
 
         $showNumber, $showTitle = & $show.parse
 
-        if ($showNumber -gt $SCRIPT:latestEpisodes[$show.name]) {
+        # silly podcasters using MS Word to corrupt their show titles grumble grumble
+        $showTitle = $showTitle -replace '–','-' -replace "’", "'"
+
+        if ([int]$showNumber -gt $SCRIPT:latestEpisodes[$show.name]) {
 
             Write-Host "New episode for $($show.name):" -ForegroundColor Yellow
             '{0} #{1}: "{2}" - {3} - {4}' -f $show.name, $showNumber, $showTitle, $pubDate, $show.tagline
@@ -49,15 +63,19 @@ function Get-NewPodcasts {
             Write-Host "No new episodes for $($show.name). Latest = $($SCRIPT:latestEpisodes[$show.name]); Current = $showNumber" -ForegroundColor Gray
             ""
         }
+
+        } catch [Exception] {
+            Write-Host "Error reading RSS for $($show.name)" -ForegroundColor Red
+            write-host $_.Exception.GetType().FullName; 
+            #write-host $_.Exception.Message; 
+        }
     }
     saveLatest
 }
 
-$latestDataFile = join-path $PSScriptRoot 'latestEpisodes.txt'
-
 function loadLatest {
     $SCRIPT:latestEpisodes = @{}
-    if (test-path $latestDataFile) {
+    if (test-path $SCRIPT:latestDataFile) {
         gc $latestDataFile | % {
             $title, $num = $_ -split '='
             $SCRIPT:latestEpisodes[$title] = $num
@@ -68,7 +86,7 @@ function loadLatest {
 function saveLatest {
     $SCRIPT:latestEpisodes.GetEnumerator() | % {
         "{0}={1}" -f $_.Key, $_.Value
-    } | Out-File $latestDataFile
+    } | Out-File $SCRIPT:latestDataFile
 
 }
 

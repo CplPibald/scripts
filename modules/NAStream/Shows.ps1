@@ -3,7 +3,7 @@ This file creates an array called $shows containing one or more show entries.
 
 Each show entry is a hashmap containing the following fields
   name:      The title of the podcast.  This is used as a key in data files
-  link:      The URL to the rss feed for the podcast
+  rssUri:      The URL to the rss feed for the podcast
   tagline:   Author string for the podcast.  Used for Creative Commons attribution
   parse:     PS scriptblock which returns an array (episode_number, episode_title)
   parseDate: (OPTIONAL) PS scriptblock returning a [datetime] object.  
@@ -13,64 +13,84 @@ Each show entry is a hashmap containing the following fields
 $shows = @(
     @{
         name = "No Agenda"
-        link = 'http://feed.nashownotes.com/rss.xml'
+        rssUri = 'http://feed.nashownotes.com/rss.xml'
         tagline = 'Adam Curry & John C. Dvorak'
         parse = { parseRssTitle $rssTitle '^(?<num>\d+).*\"(?<title>.+)\"$' }
     },
     @{
         name = "Congressional Dish"
-        link = 'http://www.congressionaldish.com/feed/podcast/'
+        rssUri = 'http://congressionaldish.libsyn.com/rss'
         tagline = 'Jennifer Briney'
         parse = { parseRssTitle $rssTitle '^CD(?<num>\d+)\: (?<title>.+)$' }
     },
     @{
         name = "Agenda 31"
-        link = 'http://www.agenda31.org/feed/podcast/'
+        rssUri = 'http://www.agenda31.org/feed/podcast/'
         tagline = 'Corey Eib & Todd McGreevy'
         parse = { parseRssTitle $rssTitle '^A31-(?<num>\d+) . (?<title>.+)$' }
     },
     @{
         name = "DH Unplugged"
-        link = 'http://www.dhunplugged.com/feed/podcast/'
+        rssUri = 'http://www.dhunplugged.com/feed/podcast/'
         tagline = 'Andrew Horowitz & John C. Dvorak'
         parse = { parseRssTitle $rssTitle '^DHUnplugged #(?<num>\d+)\: (?<title>.+)$' }
     },
-    @{
-        name = "Just Getting Tech"
-        link = 'https://justgettingtech.com/podcasts?format=RSS'
-        tagline = 'Craig Jones & Andrew Schmidt'
-        parse = { parseRssTitle $rssTitle '^(?<num>\d+)\: (?<title>.+)$' }
-    },
+#    @{
+#        name = "Just Getting Tech"
+#        rssUri = 'https://justgettingtech.com/podcasts?format=RSS'
+#        tagline = 'Craig Jones & Andrew Schmidt'
+#        parse = { parseRssTitle $rssTitle '^(?<num>\d+)\: (?<title>.+)$' }
+#    },
     @{
         name = "Airline Pilot Guy"
-        link = 'http://airlinepilotguy.com/podcast.xml'
+        rssUri = 'http://airlinepilotguy.com/podcast.xml'
         tagline = 'airlinepilotguy.com'
         parse = { parseRssTitle $rssTitle '^APG (?<num>\d+) . (?<title>.+)$' }
     },
     @{
         name = "The OO Top Ten"
-        link = 'http://rynothebearded.com/category/that-show/feed/'
+        rssUri = 'http://rynothebearded.com/category/that-show/feed/'
         tagline = 'ryno.cc'
         parse = { (([datetime]$latest.pubDate).toString('yyyyMMdd'), $rssTitle) }
     },
     @{
         name = "Nick the Rat"
-        link = 'http://nicktherat.com/radio/rss.xml'
-        tagline = 'nicktherat.com'
+        rssUri = 'http://nicktherat.com/radio/rss.xml'
+        tagline = 'nicktheratradio.com'
         parse = { parseRssTitle $rssTitle '^EPISODE (?<num>\d+) : (?<title>.+)$' }
-        parseDate = { [datetime]($args[0] -replace '\w{3}, ') }
+        # Nick hand-edits his date strings use non-standard TZ code "EST", which is ambiguous.
+        # Strip the time zone to avoid a parsing error, since we're discarding the time portion anyway
+        parseDate = { [datetime]($latest.pubDate -replace ' EST') }
     },
     @{
         name = "Cordkillers"
-        link = 'https://feeds.feedburner.com/CordkillersOnlyAudio'
+        rssUri = 'https://feeds.feedburner.com/CordkillersOnlyAudio'
         tagline = 'Brian Brushwood & Tom Merritt'
         parse = { parseRssTitle $rssTitle '^Cordkillers (?<num>\d+) . (?<title>.+)$' }
     },
     @{
         name = "Grimerica"
-        link = 'http://grimerica.libsyn.com/rss'
+        rssUri = 'http://grimerica.libsyn.com/rss'
         tagline = 'grimerica.ca'
         parse = { parseRssTitle $rssTitle '#(?<num>\d+) . (?<title>.+)$' }
+    },
+    @{
+        name = "Rock and Roll Geek Show"
+        rssUri = 'http://www.americanheartbreak.com/rnrgeekwp/feed/podcast/'
+        tagline = 'Michael Butler'
+        parse = {  
+            if ($link -match '(\d+)\.mp3$') { $matches[1] } else { 'UNKNOWN' }
+            ($rssTitle.split("–-").trim() | where { $_ -notmatch '(?:Show|Episode)\s+\d+' }) -join ' - '
+        }
+    },
+    @{
+        name = "On the Odd"
+        rssUri = 'http://ontheodd.com/feed/feed.xml'
+        tagline = 'ontheodd.com'
+        parse = { 
+            if ($link -match 's(\d+)e(\d+)\.mp3$') { 100 * $matches[1] + $matches[2] } else { 'shownum:UNKNOWN' }
+            if ($rssTitle -match '^On the Odd - (.+)$') { $matches[1] } else { 'title:UNKNOWN' }
+        }
     }
 )
 
