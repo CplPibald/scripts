@@ -13,14 +13,17 @@
 # Individual date is prepended to each line of log so that day isn't lost
 
 
-param([string]$channel, [int]$year, [int]$month)
+param([string]$channel, [int]$year, [int]$month, [switch]$prependDate)
 
 $prefix = '.\#{0}-{1}-{2:00}-*' -f $channel, $year, $month
 $outfile = '.\{0}-{1}-{2:00}.log' -f $channel, $year, $month
+$prepend = ""
 
 gci $prefix | foreach {
 
-    $prepend =  if ($_ -match '(\d{4}-\d\d-\d{2})') { "$($matches[1]) " }
+    if ($prependDate)  {
+        $prepend =  if ($_ -match '(\d{4}-\d\d-\d{2})') { "$($matches[1]) " }
+    }
 
     Get-Content $_.FullName | foreach { 
         $prepend + $_
