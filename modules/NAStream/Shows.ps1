@@ -85,12 +85,66 @@ $shows = @(
     },
     @{
         name = "On the Odd"
-        rssUri = 'http://ontheodd.com/feed/feed.xml'
+        rssUri = 'http://feeds.feedburner.com/OnTheOdd'
         tagline = 'ontheodd.com'
         parse = { 
             if ($link -match 's(\d+)e(\d+)\.mp3$') { 100 * $matches[1] + $matches[2] } else { 'shownum:UNKNOWN' }
             if ($rssTitle -match '^On the Odd - (.+)$') { $matches[1] } else { 'title:UNKNOWN' }
         }
+    }
+    @{
+        name = "TPO"
+        rssUri = 'http://feeds.soundcloud.com/users/soundcloud:users:34774199/sounds.rss'
+        tagline = 'tpo.nl'
+        parse = { 
+            if ($rssTitle -match 'aflevering (.+)$') { $matches[1] } else { 'shownum:UNKNOWN' }
+            "Sir Roderick Veelo & Bert Brussen"
+        }
+    }
+    @{
+        name = "Randumb Thoughts"
+        rssUri = 'http://randumbthoughts.com/index.php/feed/podcast/'
+        tagline = 'randumbthoughts.com'
+        parse = { parseRssTitle $rssTitle '^Episode #(?<num>\d+) – (?<title>.+) – Randumb Thoughts Podcast' }
+    }
+    @{
+        name = "The Mark and George Show"
+        rssUri = 'https://www.markandgeorgeshow.com/feed'
+        tagline = 'markandgeorgeshow.com'
+        parse = { parseRssTitle $rssTitle '^(?<title>.+) \| Ep\. (?<num>\d+)$' }
+    }
+    @{
+        name = "That Larry Show"
+        rssUri = 'http://thatlarryshow.com/feed/podcast/'
+        tagline = 'thatlarryshow.com'
+        parse = { parseRssTitle $rssTitle '^Episode (?<num>\d+)\: (?<title>.+)$' }
+    }
+    @{
+        name = "Fault Lines"
+        rssUri = 'https://www.spreaker.com/show/2268375/episodes/feed'
+        tagline = 'Garland Nixon and Lee Stranahan'
+        parse = {  
+            if ($link -match '(\d+)\.mp3$') { $matches[1] } else { 'UNKNOWN' }
+            $rssTitle
+        }
+    }
+    @{
+        name = "Shire News Network Archive"
+        rssUri = 'https://brianoflondon.me/feed/podcast/shire-network-news-archive'
+        tagline = 'brianoflondon.me'
+        parse = { parseRssTitle $rssTitle '^(?<num>\d+) (?<title>.+) from (?<date>.+)$' }
+    }
+    @{
+        name = "Hog Story"
+        rssUri = 'http://www.hogstory.net/feed/'
+        tagline = 'hogstory.net'
+        parse = { parseRssTitle $rssTitle '^S1E(?<num>\d+)\: (?<title>.+)' }
+    }
+    @{
+        name = "Grumpy Old Bens"
+        rssUri = 'http://grumpyoldbens.com/feed/podcast'
+        tagline = 'grumpyoldbens.com'
+        parse = { parseRssTitle $rssTitle '^Episode (?<num>\d+)\: (?<title>.+)$' }
     }
 )
 

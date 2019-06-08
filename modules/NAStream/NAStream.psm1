@@ -48,7 +48,7 @@ function Get-NewPodcasts {
         $showNumber, $showTitle = & $show.parse
 
         # silly podcasters using MS Word to corrupt their show titles grumble grumble
-        $showTitle = $showTitle -replace '–','-' -replace "’", "'"
+        $showTitle = $showTitle -replace '–','-' -replace "’", "'" -replace '”', '"'
 
         if ([int]$showNumber -gt $SCRIPT:latestEpisodes[$show.name]) {
 
