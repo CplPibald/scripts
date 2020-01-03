@@ -21,13 +21,23 @@
 function Get-NewPodcasts {
 
     param(
-        [switch]$download
+        [string]$filter = $null,
+        [switch]$download,
+        [switch]$debug
     )
 
+    if ($debug) { $DebugPreference = 'SilentlyContinue' }
+    
+    "======================================"
+    "New podcast report for $(Get-Date)"
+    ""
+    
     loadLatest
 
     foreach($show in $shows) {
 
+        if ($show.name -notmatch $filter) { continue; }
+    
         try {
 
         $page = Invoke-WebRequest $show.rssUri
@@ -37,8 +47,10 @@ function Get-NewPodcasts {
 
         # The xml parser is picking up Apple's new proprietary <itunes:title> tag, which is turning the title into an array...
         $rssTitle = $latest.title | select -First 1
+        Write-Debug "rssTitle = '$rssTitle'"
 
         $link = $latest.enclosure.url
+        Write-Debug "link = '$link'"
         $pubDate = if ($show.containsKey('parseDate')) {
             (&$show.parseDate $latest.pubDate).toString('ddd, dd MMM yyyy')
         } else {
@@ -67,7 +79,7 @@ function Get-NewPodcasts {
         } catch [Exception] {
             Write-Host "Error reading RSS for $($show.name)" -ForegroundColor Red
             write-host $_.Exception.GetType().FullName; 
-            #write-host $_.Exception.Message; 
+            write-host $_.Exception.Message; 
         }
     }
     saveLatest

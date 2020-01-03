@@ -88,7 +88,7 @@ $shows = @(
         rssUri = 'http://feeds.feedburner.com/OnTheOdd'
         tagline = 'ontheodd.com'
         parse = { 
-            if ($link -match 's(\d+)e(\d+)\.mp3$') { 100 * $matches[1] + $matches[2] } else { 'shownum:UNKNOWN' }
+            if ($link -match 's(\d+)e(\d+)\.mp3$') { 100 * $matches[1] + $matches[2] } else { -1 }
             if ($rssTitle -match '^On the Odd - (.+)$') { $matches[1] } else { 'title:UNKNOWN' }
         }
     }
@@ -97,7 +97,7 @@ $shows = @(
         rssUri = 'http://feeds.soundcloud.com/users/soundcloud:users:34774199/sounds.rss'
         tagline = 'tpo.nl'
         parse = { 
-            if ($rssTitle -match 'aflevering (.+)$') { $matches[1] } else { 'shownum:UNKNOWN' }
+            if ($rssTitle -match 'aflevering (.+)$') { $matches[1] } else { -1 }
             "Sir Roderick Veelo & Bert Brussen"
         }
     }
@@ -119,15 +119,15 @@ $shows = @(
         tagline = 'thatlarryshow.com'
         parse = { parseRssTitle $rssTitle '^Episode (?<num>\d+)\: (?<title>.+)$' }
     }
-    @{
-        name = "Fault Lines"
-        rssUri = 'https://www.spreaker.com/show/2268375/episodes/feed'
-        tagline = 'Garland Nixon and Lee Stranahan'
-        parse = {  
-            if ($link -match '(\d+)\.mp3$') { $matches[1] } else { 'UNKNOWN' }
-            $rssTitle
-        }
-    }
+    # @{
+        # name = "Fault Lines"
+        # rssUri = 'https://www.spreaker.com/show/2268375/episodes/feed'
+        # tagline = 'Garland Nixon and Lee Stranahan'
+        # parse = {  
+            # if ($link -match '(\d+)\.mp3$') { $matches[1] } else { -1 }
+            # $rssTitle
+        # }
+    # }
     @{
         name = "Shire News Network Archive"
         rssUri = 'https://brianoflondon.me/feed/podcast/shire-network-news-archive'
@@ -138,13 +138,49 @@ $shows = @(
         name = "Hog Story"
         rssUri = 'http://www.hogstory.net/feed/'
         tagline = 'hogstory.net'
-        parse = { parseRssTitle $rssTitle '^S1E(?<num>\d+)\: (?<title>.+)' }
+        parse = { parseRssTitle $rssTitle '^Hog Story \#(?<num>\d+) (?<title>.+)' }
     }
     @{
         name = "Grumpy Old Bens"
         rssUri = 'http://grumpyoldbens.com/feed/podcast'
         tagline = 'grumpyoldbens.com'
         parse = { parseRssTitle $rssTitle '^Episode (?<num>\d+)\: (?<title>.+)$' }
+    }
+    @{
+        name = "Moe Factz"
+        rssUri = 'http://feed.nashownotes.com/mfrss.xml'
+        tagline = 'moefactz.com'
+        parse = { parseRssTitle $rssTitle '^(?<num>\d+)\: (?<title>.+)$' }
+    }
+    @{
+        name = "With Adam Curry"
+        rssUri = 'http://feed.nashownotes.com/wacrss.xml'
+        tagline = 'withadamcurry.com'
+        parse = { 
+            if ($link -match 'WAC-(\d+)-') { $matches[1] } else { -1 }
+            $rssTitle
+        }
+    }
+    @{
+        name = "Who Are These Podcasts?"
+        rssUri = 'http://whoarethese.com/rss'
+        tagline = 'whoarethese.com'
+        parse = { parseRssTitle $rssTitle '^Ep(?<num>\d+) - (?<title>.+)$' }
+    }
+    @{
+        name = "Up is Down"
+        rssUri = 'https://www.spreaker.com/show/3564656/episodes/feed'
+        tagline = 'davereiner.com'
+        parse = { parseRssTitle $rssTitle '^Ep (?<num>\d+) (?<title>.+)$' }
+    }
+    @{
+        name = "A Walk Through the Mind"
+        rssUri = 'http://billybon3s.libsyn.com/rss'
+        tagline = 'billybon3s.com'
+        parse = { 
+            if ($link -match 'WTtM_(\d+)_') { $matches[1] } else { -1 }
+            $rssTitle
+        }
     }
 )
 
