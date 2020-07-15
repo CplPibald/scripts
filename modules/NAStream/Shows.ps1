@@ -170,7 +170,7 @@ $shows = @(
     @{
         name = "Up is Down"
         rssUri = 'https://www.spreaker.com/show/3564656/episodes/feed'
-        tagline = 'davereiner.com'
+        tagline = 'deanreiner.com'
         parse = { parseRssTitle $rssTitle '^Ep (?<num>\d+) (?<title>.+)$' }
     }
     @{
@@ -181,6 +181,12 @@ $shows = @(
             if ($link -match 'WTtM_(\d+)_') { $matches[1] } else { -1 }
             $rssTitle
         }
+    }
+    @{
+        name = "SmashCast"
+        rssUri = 'https://smashcast.squarespace.com/smashcast?format=rss'
+        tagline = 'smashcast.squarespace.com'
+        parse = { 33; $rssTitle }
     }
 )
 
