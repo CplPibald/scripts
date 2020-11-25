@@ -37,6 +37,7 @@ function Get-NewPodcasts {
     foreach($show in $shows) {
 
         if ($show.name -notmatch $filter) { continue; }
+        if ($show.disabled) { continue; }
     
         try {
 
@@ -57,7 +58,12 @@ function Get-NewPodcasts {
             ([datetime]$latest.pubDate).toString('ddd, dd MMM yyyy')
         }
 
-        $showNumber, $showTitle = & $show.parse
+        if ($show.parse) {
+            $showNumber, $showTitle = & $show.parse
+        } else {
+            $showNumber = $latest.episode
+            $showTitle = $latest.GetElementsByTagName('itunes:title')[0].'#text'
+        }
 
         # silly podcasters using MS Word to corrupt their show titles grumble grumble
         $showTitle = $showTitle -replace '–','-' -replace "’", "'" -replace '”', '"'
